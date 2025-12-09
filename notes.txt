@@ -1,0 +1,38 @@
+Build a simple web service that provides CRUD-style API access to data stored in db system.
+Use any programming language or database system preferred.
+
+Create a database table that hold records representing Vehicle.
+
+-----------------------------
+python FastAPI + postgresql to run our application
+
+# Install FastAPI and Uvicorn
+pip install fastapi uvicorn
+
+# Install database dependencies
+pip install sqlalchemy psycopg2-binary
+
+-----------------------------
+
+Starting postgresql, in terminal call
+
+1. brew services start postgresql@14 to start in background
+2. psql postgres
+
+Create schema for vehicles
+-----------------------------
+
+Vehicle has these properties to consider
+- A VIN, aka uniquely identifiable ID number.
+the VID should be the primary key and since it is an ID number, declare of type INTEGER, or SERIAL
+
+- manufacturer name (string)
+VARCHAR(MAX CHAR)
+- description (string)
+- horse power (integer)
+- model name (string)
+- model year (integer)
+- purchase price (decimal)
+- fuel type (string)
+
+Then implement API endpoints
