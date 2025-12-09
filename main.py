@@ -215,6 +215,80 @@ def get_vehicle_by_vin(vin: str):
             detail="Failed to retrieve vehicle"
         ) from e
 
+@app.put("/vehicle/{vin}", response_model=VehicleResponse)
+def update_vehicle(vin: str, vehicle: VehicleCreate):
+    """
+    Update an existing vehicle identified by its VIN.
+    Response on success: 200 OK with updated vehicle details.
+    Response on failure: 404 Not Found if vehicle does not exist, 500 Internal Server Error if update fails.
+    """
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            update_query = """
+                UPDATE vehicles
+                SET manufacturer_name = %s,
+                    description = %s,
+                    horse_power = %s,
+                    model_name = %s,
+                    model_year = %s,
+                    purchase_price = %s,
+                    fuel_type = %s
+                WHERE LOWER(vin) = LOWER(%s)
+                RETURNING vin, manufacturer_name, description, horse_power, model_name, model_year, purchase_price, fuel_type;
+            """
+            cursor.execute(update_query, (
+                vehicle.manufacturer_name,
+                vehicle.description,
+                vehicle.horse_power,
+                vehicle.model_name,
+                vehicle.model_year,
+                vehicle.purchase_price,
+                vehicle.fuel_type,
+                vin
+            ))
+            updated_vehicle = cursor.fetchone()
+            cursor.close()
+            if updated_vehicle is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vehicle not found")
+            return VehicleResponse(
+                vin=updated_vehicle[0],
+                manufacturer_name=updated_vehicle[1],
+                description=updated_vehicle[2],
+                horse_power=updated_vehicle[3],
+                model_name=updated_vehicle[4],
+                model_year=updated_vehicle[5],
+                purchase_price=float(updated_vehicle[6]),
+                fuel_type=updated_vehicle[7]
+            )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update vehicle"
+        ) from e
+    
+@app.delete("/vehicle/{vin}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_vehicle(vin: str):
+    """
+    Delete a vehicle by its VIN.
+    Response on success: 204 No Content.
+    Response on failure: 404 Not Found if vehicle does not exist, 500 Internal Server Error if deletion fails.
+    """
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM vehicles WHERE LOWER(vin) = LOWER(%s) RETURNING vin;", (vin,))
+            deleted_vehicle = cursor.fetchone()
+            cursor.close()
+            if deleted_vehicle is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vehicle not found")
+            return
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete vehicle"
+        ) from e
+    
 if __name__ == "__main__":
     import uvicorn
     # Run the application with hot reload enabled for development
