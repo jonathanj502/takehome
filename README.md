@@ -29,7 +29,7 @@ A FastAPI-based REST API for managing vehicle records with PostgreSQL database.
 
 1. Clone the repository:
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/jonathanj502/takehome.git
 cd Takehome
 ```
 
