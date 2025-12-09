@@ -8,7 +8,7 @@ import psycopg2
 import hashlib
 
 # Inits: DB connections and FastAPI app
-DATABASE_URL = "postgresql://jonathanj@localhost/apollo_take_home"
+DATABASE_URL = "postgresql://localhost/apollo_take_home"
 app = FastAPI(
     title="Vehicle Management API",
     description="CRUD API for managing vehicle records",
@@ -95,7 +95,6 @@ def get_db_connection():
             conn.rollback()
         raise e
     finally:
-        # Always close the connection to free resources
         if conn:
             conn.close()
 
