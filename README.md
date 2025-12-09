@@ -60,7 +60,26 @@ uvicorn main:app --reload
 ```
 
 The API will be available at:
-- **API**: http://localhost:8000
+- **API**: http:/INSERT INTO vehicles (
+    vin,
+    manufacturer_name,
+    description,
+    horse_power,
+    model_name,
+    model_year,
+    purchase_price,
+    fuel_type
+  )
+VALUES (
+    'vin:character varying',
+    'manufacturer_name:character varying',
+    'description:text',
+    horse_power:integer,
+    'model_name:character varying',
+    model_year:integer,
+    purchase_price:numeric,
+    'fuel_type:character varying'
+  );/localhost:8000
 - **Docs**: http://localhost:8000/docs
 - **Health Check**: http://localhost:8000/
 
@@ -99,7 +118,7 @@ The VIN is automatically generated from a sequence ID using SHA256 hashing. Do n
 **Response**: 201 Created
 ```json
 {
-  "vin": "8K9P5M2L7Q3R1X4Y6Z",
+  "vin": "8K9P5M2L7Q3R1X4Y6Z", # Actual vin will be different. Vin is generated server side.
   "manufacturer_name": "Honda",
   "description": "Blue sedan",
   "horse_power": 192,

@@ -19,7 +19,26 @@ class TestVINGeneration:
             vin = generate_vin(i)
             assert not any(char in invalid_chars for char in vin)
 
-    def test_generate_vin_deterministic(self):
+    def test_generate_vin_deterministic(self):INSERT INTO vehicles (
+        vin,
+        manufacturer_name,
+        description,
+        horse_power,
+        model_name,
+        model_year,
+        purchase_price,
+        fuel_type
+      )
+    VALUES (
+        'vin:character varying',
+        'manufacturer_name:character varying',
+        'description:text',
+        horse_power:integer,
+        'model_name:character varying',
+        model_year:integer,
+        purchase_price:numeric,
+        'fuel_type:character varying'
+      );
         """Test that same ID always produces same VIN."""
         vin1 = generate_vin(42)
         vin2 = generate_vin(42)

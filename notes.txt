@@ -24,8 +24,7 @@ Create schema for vehicles
 
 Vehicle has these properties to consider
 - A VIN, aka uniquely identifiable ID number.
-the VID should be the primary key and since it is an ID number, declare of type INTEGER, or SERIAL
-
+the VID should be the primary key and since it is an ID string.
 - manufacturer name (string)
 VARCHAR(MAX CHAR)
 - description (string)
