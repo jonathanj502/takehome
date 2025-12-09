@@ -3,6 +3,9 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from contextlib import contextmanager
 import psycopg2
+import random
+import string
+import hashlib
 
 # Inits: DB connections and FastAPI app
 DATABASE_URL = "postgresql://jonathanj@localhost/apollo_take_home"
@@ -12,9 +15,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
+def generate_vin(vehicle_id: int) -> str:
+    """Generate a unique 17-character VIN."""
+    chars = '0123456789ABCDEFGHJKLMNPRSTUVWXYZ'  # No I, O, Q
+    hash_bytes = hashlib.sha256(str(vehicle_id).encode()).digest()
+    vin = ''.join(chars[hash_bytes[i] % len(chars)] for i in range(17))
+    return vin
+
 # Pydantic models for request/response
 class VehicleCreate(BaseModel):
-    vin: str = Field(..., min_length=17, max_length=17)
     manufacturer_name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
     horse_power: int
@@ -126,16 +135,28 @@ def get_vehicle():
 
 @app.post("/vehicle", status_code=status.HTTP_201_CREATED, response_model=VehicleResponse)
 def create_vehicle(vehicle: VehicleCreate):
+    """
+    Create a new vehicle with system-generated unique VIN.
+    The system automatically generates a valid 17-character VIN from a sequence.
+    """
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
+            
+            # Get next sequence value
+            cursor.execute("SELECT nextval('vehicle_id_seq')")
+            vehicle_id = cursor.fetchone()[0]
+            
+            # Generate VIN from ID using hash function
+            vin = generate_vin(vehicle_id)
+            
             insert_query = """
                 INSERT INTO vehicles (vin, manufacturer_name, description, horse_power, model_name, model_year, purchase_price, fuel_type)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING vin, manufacturer_name, description, horse_power, model_name, model_year, purchase_price, fuel_type;
             """
             cursor.execute(insert_query, (
-                vehicle.vin,
+                vin,
                 vehicle.manufacturer_name,
                 vehicle.description,
                 vehicle.horse_power,
@@ -162,9 +183,6 @@ def create_vehicle(vehicle: VehicleCreate):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create new vehicle"
         ) from e
-    
-    
-
 
 if __name__ == "__main__":
     import uvicorn
