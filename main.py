@@ -131,7 +131,7 @@ def get_vehicle():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve vehicles from database"
-        )
+        ) from e
 
 @app.post("/vehicle", status_code=status.HTTP_201_CREATED, response_model=VehicleResponse)
 def create_vehicle(vehicle: VehicleCreate):
@@ -182,6 +182,37 @@ def create_vehicle(vehicle: VehicleCreate):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create new vehicle"
+        ) from e
+
+@app.get("/vehicle/{vin}", response_model=VehicleResponse)
+def get_vehicle_by_vin(vin: str):
+    """
+    Retrieve a vehicle by its VIN.
+    Response on success: 200 OK with vehicle details.
+    Response on failure: 404 Not Found if vehicle does not exist, 500 Internal Server
+    """
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM vehicles WHERE LOWER(vin) = LOWER(%s);", (vin,))
+            vehicle = cursor.fetchone()
+            cursor.close()
+            if vehicle is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vehicle not found")
+            return VehicleResponse(
+                vin=vehicle[0],
+                manufacturer_name=vehicle[1],
+                description=vehicle[2],
+                horse_power=vehicle[3],
+                model_name=vehicle[4],
+                model_year=vehicle[5],
+                purchase_price=float(vehicle[6]),
+                fuel_type=vehicle[7]
+            )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve vehicle"
         ) from e
 
 if __name__ == "__main__":
