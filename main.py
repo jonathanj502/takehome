@@ -1,10 +1,10 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from contextlib import contextmanager
 import psycopg2
-import random
-import string
 import hashlib
 
 # Inits: DB connections and FastAPI app
@@ -14,6 +14,34 @@ app = FastAPI(
     description="CRUD API for managing vehicle records",
     version="1.0.0"
 )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """
+    Custom handler to distinguish between JSON parsing errors (400) 
+    and validation errors (422).
+    """
+    errors = exc.errors()
+    
+    # JSON parsing errors have type 'json_invalid' or similar
+    for error in errors:
+        if error.get('type') in ['json_invalid', 'json_type']:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "detail": "Invalid JSON format - cannot parse request body",
+                    "errors": errors
+                }
+            )
+    
+    # Otherwise, it's a validation error (422)
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "detail": "Validation error - invalid or missing fields",
+            "errors": errors
+        }
+    )
 
 def generate_vin(vehicle_id: int) -> str:
     """Generate a unique 17-character VIN."""
